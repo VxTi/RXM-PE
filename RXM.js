@@ -51,7 +51,7 @@ function dip2px(dips) {
         .getDisplayMetrics()
         .density);
 }
-const currentVersion = "0.3";
+const currentVersion = "0.4";
 var newVersion; 
 var releaseNotes = "";
 getModVersion = function() {
@@ -453,6 +453,7 @@ function chatHook(string) {
 }
 var mods = {
     activate: function() {
+        mods.FastLadder.g();
         mods.Phase.g();
         mods.NoSlowDown.g();
         mods.Reach.g();
@@ -489,14 +490,14 @@ var mods = {
         g: function() {
             if (mods.NoSlowDown.state) {
                 if (getTile(Math.round(getPlayerX() - 0.5), Math.round(getPlayerY() - 1.62), Math.round(getPlayerZ() - 0.5)) == 8 || getTile(Math.round(getPlayerX() - 0.5), Math.round(getPlayerY() - 0.62), Math.round(getPlayerZ() - 0.5)) == 8 || getTile(Math.round(getPlayerX() - 0.5), Math.round(getPlayerY() - 1.62), Math.round(getPlayerZ() - 0.5)) == 9 || getTile(Math.round(getPlayerX() - 0.5), Math.round(getPlayerY() - 0.62), Math.round(getPlayerZ() - 0.5)) == 9) {
-                    if (Players.calculateSpeed() > 0.025) {
+                    if (Players.calculateSpeed() > 0.03) {
                         var vector = new Array();
                         var yaw = (getYaw(getPlayerEnt()) + 90) * (Math.PI / 180);
                         var pitch = 0;
                         vector[0] = Math.cos(yaw) * Math.cos(pitch);
                         vector[2] = Math.sin(yaw) * Math.cos(pitch);
-                        vector[0] = vector[0] / 3;
-                        vector[2] = vector[2] / 3;
+                        vector[0] = vector[0] / 3.9;
+                        vector[2] = vector[2] / 3.9;
                         Entity.setVelX(getPlayerEnt(), vector[0]);
                         Entity.setVelZ(getPlayerEnt(), vector[2]);
                     }
@@ -568,8 +569,20 @@ var mods = {
             }
         }
     },
+    FastLadder: {
+        state: false, 
+        tick: 0,
+        g: function() {
+            if (mods.FastLadder.state) {
+            if (mods.FastLadder.tick == 20) mods.FastLadder.tick = 0;
+            if (mods.FastLadder.tick == 0 && getTile(Math.round(getPlayerX() - 0.5), Math.round(getPlayerY() - 1.62), Math.round(getPlayerZ() - 0.5)) == 65 || getTile(Math.round(getPlayerX() - 0.5), Math.round(getPlayerY() - 0.62), Math.round(getPlayerZ() - 0.5)) == 65) setVelY(getPlayerEnt(), 0.425);
+            mods.FastLadder.tick++;
+            }
+        }
+    },
     Step: {
         state: false,
+        vtick: 0,
         mode: "Teleport",
         switchMode: function() {
             switch (mods.Step.mode) {
@@ -577,9 +590,9 @@ var mods = {
                 mods.Step.mode = "Velocity";
                 break;
                 case "Velocity":
-                mods.Step.mode = "Clip";
+                mods.Step.mode = "Fast";
                 break;
-                case "Clip":
+                case "Fast":
                 mods.Step.mode = "Teleport"
                 break;
             }
@@ -593,23 +606,16 @@ var mods = {
                         Entity.setPositionRelative(getPlayerEnt(), 0, 1.6, 0);
                         Entity.setVelY(getPlayerEnt(), 0.05);
                     }
-                    if (mods.Step.mode == "Clip") {
-                        if (!clipping) {
-                            clipping = true;
+                    if (mods.Step.mode == "Fast") {
                             var vector = new Array();
                             var yaw = (getYaw(getPlayerEnt()) + 90) * (Math.PI / 180);
                             var pitch = 0;
                             vector[0] = Math.cos(yaw) * Math.cos(pitch);
                             vector[2] = Math.sin(yaw) * Math.cos(pitch);
-                            vector[0] = vector[0] / 4;
-                            vector[2] = vector[2] / 4;
-                            setPositionRelative(getPlayerEnt(), vector[0], 0, vector[2]);
-                        }
-                        setPositionRelative(getPlayerEnt(), 0, 1.3, 0);
+                            vector[0] = vector[0] / 5;
+                            vector[2] = vector[2] / 5;
+                            Players.setVelocity(vector[0], 0.425, vector[2]);
                     }
-                }
-                if (!Players.isCollidedHorizontally() && clipping) {
-                    clipping = false;
                 }
             }
         }
@@ -647,8 +653,8 @@ var mods = {
                         var pitch = 0;
                         vector[0] = Math.cos(yaw) * Math.cos(pitch);
                         vector[2] = Math.sin(yaw) * Math.cos(pitch);
-                        vector[0] = vector[0] / 0.8;
-                        vector[2] = vector[2] / 0.8;
+                        vector[0] = vector[0] / 1.5;
+                        vector[2] = vector[2] / 1.5;
                         Entity.setVelX(getPlayerEnt(), vector[0]);
                         Entity.setVelZ(getPlayerEnt(), vector[2]);
                     }
@@ -763,6 +769,21 @@ function clickGui() {
                     onClick: function() {
                         mods.Velocity.state = !mods.Velocity.state;
                         velocity_button.setBackgroundDrawable(mods.Velocity.state == true ? draw_module_on : draw_module_off);
+                    }
+                }));
+
+                var fastladder_button = new android.widget.Button(ctx);
+                fastladder_button.setText("FastLadder");
+                fastladder_button.setTransformationMethod(null);
+                fastladder_button.setTypeface(font);
+                fastladder_button.setTextSize(dip2px(7));
+                fastladder_button.setTextColor(android.graphics.Color.WHITE);
+                fastladder_button.setGravity(android.view.Gravity.CENTER)
+                fastladder_button.setBackgroundDrawable(mods.FastLadder.state == true ? draw_module_on : draw_module_off);
+                fastladder_button.setOnClickListener(new android.view.View.OnClickListener({
+                    onClick: function() {
+                        mods.FastLadder.state = !mods.FastLadder.state;
+                        fastladder_button.setBackgroundDrawable(mods.FastLadder.state == true ? draw_module_on : draw_module_off);
                     }
                 }));
 
@@ -934,6 +955,7 @@ function clickGui() {
                 scrl.addView(glide_button);
                 scrl.addView(noslowdown_button);    
                 scrl.addView(phase_button); 
+                scrl.addView(fastladder_button);
                 scr.addView(scrl);
                 
                 layout.addView(scr, menuX, menuY2);
