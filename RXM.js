@@ -54,7 +54,7 @@ function dip2px(dips) {
 const currentVersion = "0.2";
 var newVersion; 
 var releaseNotes = "";
-RXM.getModVersion = function() {
+getModVersion = function() {
     try {
         var url = new java.net.URL("https://raw.githubusercontent.com/VxTi/RXM-PE/master/RXM-version");
         var connection = url.openConnection();
@@ -1220,7 +1220,7 @@ function modTick() {
     mods.activate();
     if (!initialized) {
         initialized = !initialized;
-        RXM.getModVersion();
+        getModVersion();
         if (newVersion != currentVersion && newVersion != undefined) {
             clientMessage(ChatColor.BLUE + "[UPDATE]: " + ChatColor.GRAY + "There is a new update avalable! (" + Texts.General.modTitle + " v" + newVersion + ")");
         } else {
