@@ -9,13 +9,7 @@ var menuBtn;
 var notifyMenu;
 var menuState = "none";
 var notifyState = false;
-function rmw() {
-    for (i = 8; i < 11; i++) {
-        Block.defineBlock(i, "Water", [["flowing_water", 0]], 0, 0, false);
-        Block.setDestroyTime(i, 0.05);
-    }
-}
-//rmw();
+
 var modDir = android.os.Environment.getExternalStorageDirectory() + "/RxM/";
 
 var menuX = ctx.getWindowManager().getDefaultDisplay().getWidth() / 1.52;
@@ -57,6 +51,27 @@ function dip2px(dips) {
         .getDisplayMetrics()
         .density);
 }
+const currentVersion = "0.2";
+var newVersion; 
+var releaseNotes = "";
+RXM.getModVersion = function() {
+    try {
+        var url = new java.net.URL("https://raw.githubusercontent.com/VxTi/RXM-PE/master/RXM-version");
+        var connection = url.openConnection();
+        inputStream = connection.getInputStream();
+        var loadedVersion = "";
+        var bufferedVersionReader = new java.io.BufferedReader(new java.io.InputStreamReader(inputStream));
+        var rowVersion = "";
+        while((rowVersion = bufferedVersionReader.readLine()) != null) {
+            loadedVersion += rowVersion;
+        }
+        newVersion = loadedVersion.split(":")[0];
+        releaseNotes = loadedVersion.split(":")[1];
+        bufferedVersionReader.close();;
+    } catch(err) {
+        notifymsg("Error: Can't check for updates, Please check your internet connection.");
+    } 
+}
 function showButton() {
     ctx.runOnUiThread(new java.lang.Runnable({
         run: function() {
@@ -72,6 +87,7 @@ function showButton() {
                 bg2.setColor(android.graphics.Color.argb(160, 20, 20, 20));
                 menuBtn.setTypeface(font);
                 menuBtn.setTextSize(dip2px(6))
+                menuBtn.setTransformationMethod(null);
                 menuBtn.setText(Texts.General.modTitle);
                 menuBtn.setTextColor(android.graphics.Color.WHITE); 
                 menuBtn.setOnClickListener(new android.view.View.OnClickListener({
@@ -125,19 +141,6 @@ function showButton() {
     }));
 }
 showButton();
-function ppos(p) {
-    switch(p) {
-        case "x":
-        return getPlayerX() - 0.5;
-        break; 
-        case "y":
-        return getPlayerY() - 1.62;
-        break; 
-        case "z":
-        return getPlayerZ() - 0.5;
-        break; 
-    }
-}
 
 
 var Texts = {
@@ -403,6 +406,10 @@ function chatHook(string) {
         var c2 = string.split(" ");
         preventDefault();
         switch (c[0]) {
+            case "-changelog":
+            if (c[1]) return;
+            clientMessage(ChatColor.BLUE + "[CHANGELOG]: " + ChatColor.GRAY + releaseNotes);
+            break;
             case "-friends":
             case "-f":
             case "-friend":
@@ -446,7 +453,8 @@ function chatHook(string) {
 }
 var mods = {
     activate: function() {
-        mods.AntiWeb.g();
+        mods.Phase.g();
+        mods.NoSlowDown.g();
         mods.Reach.g();
         mods.Aimbot.g();
         mods.Velocity.g();
@@ -475,22 +483,34 @@ var mods = {
             }
         }
     },
-    AntiWeb: {
+    NoSlowDown: {
         state: false, 
-        bstate: false,  
+        webstate: false,  
         g: function() {
-            if (mods.AntiWeb.state) {
-                if (getTile(getPlayerX() - 0.5, ppos("y") + 1, getPlayerZ() - 0.5) == 30 || getTile(getPlayerX() - 0.5, ppos("y"), getPlayerZ() - 0.5) == 30) {
-                    if (!mods.AntiWeb.bstate) {
+            if (mods.NoSlowDown.state) {
+                if (getTile(Math.round(getPlayerX() - 0.5), Math.round(getPlayerY() - 1.62), Math.round(getPlayerZ() - 0.5)) == 8 || getTile(Math.round(getPlayerX() - 0.5), Math.round(getPlayerY() - 0.62), Math.round(getPlayerZ() - 0.5)) == 8 || getTile(Math.round(getPlayerX() - 0.5), Math.round(getPlayerY() - 1.62), Math.round(getPlayerZ() - 0.5)) == 9 || getTile(Math.round(getPlayerX() - 0.5), Math.round(getPlayerY() - 0.62), Math.round(getPlayerZ() - 0.5)) == 9) {
+                    if (Players.calculateSpeed > 0.025) {
+                        var vector = new Array();
+                        var yaw = (getYaw(getPlayerEnt()) + 90) * (Math.PI / 180);
+                        var pitch = 0;
+                        vector[0] = Math.cos(yaw) * Math.cos(pitch);
+                        vector[2] = Math.sin(yaw) * Math.cos(pitch);
+                        vector[0] = vector[0] / 2.5;
+                        vector[2] = vector[2] / 2.5;
+                        Players.setVelocity(vector[0], 0, vector[2]);
+                    }
+                }
+                if (getTile(Math.round(getPlayerX() - 0.5), Math.round(getPlayerY() - 1.62), Math.round(getPlayerZ() - 0.5)) == 30 || getTile(Math.round(getPlayerX() - 0.5), Math.round(getPlayerY() - 0.62), Math.round(getPlayerZ() - 0.5)) == 30) {
+                    if (!mods.NoSlowDown.webstate) {
                         var xyz = [getPlayerX(), getPlayerY(), getPlayerZ()];
-                        mods.AntiWeb.bstate = true;
+                        mods.NoSlowDown.webstate = true;
                         Entity.setCollisionSize(getPlayerEnt(), 0, 0);
                         setPosition(getPlayerEnt(), xyz[0], xyz[1], xyz[2]);        
                     }
-                } else if (mods.AntiWeb.bstate) {
+                } else if (mods.NoSlowDown.webstate) {
                     var xyz = [getPlayerX(), getPlayerY(), getPlayerZ()];
                     Entity.setCollisionSize(getPlayerEnt(), 0.6, 1.8);
-                    mods.AntiWeb.bstate = false; 
+                    mods.NoSlowDown.webstate = false; 
                     setPosition(getPlayerEnt(), xyz[0], xyz[1], xyz[2]);
                 }
             }
@@ -529,6 +549,24 @@ var mods = {
             }
         }
     },
+    Phase: {
+        state: false, 
+        g: function() {
+            if (mods.Phase.state) {
+                if (Entity.isSneaking(getPlayerEnt())) {
+                    var vector = new Array();
+                    var yaw = (getYaw(getPlayerEnt()) + 90) * (Math.PI / 180);
+                    var pitch = 0;
+                    vector[0] = Math.cos(yaw) * Math.cos(pitch);
+                    vector[2] = Math.sin(yaw) * Math.cos(pitch);
+                    vector[0] = vector[0] / 1.5;
+                    vector[2] = vector[2] / 1.5;
+                    setPositionRelative(getPlayerEnt(), vector[0], 0, vector[2]);
+                    Entity.setSneaking(getPlayerEnt(), false); 
+                }
+            }
+        }
+    },
     Step: {
         state: false,
         mode: "Teleport",
@@ -562,8 +600,8 @@ var mods = {
                             var pitch = 0;
                             vector[0] = Math.cos(yaw) * Math.cos(pitch);
                             vector[2] = Math.sin(yaw) * Math.cos(pitch);
-                            vector[0] = vector[0] / 3;
-                            vector[2] = vector[2] / 3;
+                            vector[0] = vector[0] / 4;
+                            vector[2] = vector[2] / 4;
                             setPositionRelative(getPlayerEnt(), vector[0], 0, vector[2]);
                         }
                         setPositionRelative(getPlayerEnt(), 0, 1.3, 0);
@@ -726,6 +764,21 @@ function clickGui() {
                         velocity_button.setBackgroundDrawable(mods.Velocity.state == true ? draw_module_on : draw_module_off);
                     }
                 }));
+
+                var phase_button = new android.widget.Button(ctx);
+                phase_button.setText("Phase");
+                phase_button.setTransformationMethod(null);
+                phase_button.setTypeface(font);
+                phase_button.setTextSize(dip2px(7));
+                phase_button.setTextColor(android.graphics.Color.WHITE);
+                phase_button.setGravity(android.view.Gravity.CENTER)
+                phase_button.setBackgroundDrawable(mods.Phase.state == true ? draw_module_on : draw_module_off);
+                phase_button.setOnClickListener(new android.view.View.OnClickListener({
+                    onClick: function() {
+                        mods.Phase.state = !mods.Phase.state;
+                        phase_button.setBackgroundDrawable(mods.Phase.state == true ? draw_module_on : draw_module_off);
+                    }
+                }));
                 var reach_button = new android.widget.Button(ctx);
                 reach_button.setText("Reach");
                 reach_button.setTypeface(font);
@@ -755,18 +808,18 @@ function clickGui() {
                     }
                 }));
 
-                var antiweb_button = new android.widget.Button(ctx);
-                antiweb_button.setText("Anti-Web");
-                antiweb_button.setTypeface(font);
-                antiweb_button.setTransformationMethod(null);
-                antiweb_button.setTextSize(dip2px(7));
-                antiweb_button.setTextColor(android.graphics.Color.WHITE);
-                antiweb_button.setGravity(android.view.Gravity.CENTER)
-                antiweb_button.setBackgroundDrawable(mods.AntiWeb.state == true ? draw_module_on : draw_module_off);
-                antiweb_button.setOnClickListener(new android.view.View.OnClickListener({
+                var noslowdown_button = new android.widget.Button(ctx);
+                noslowdown_button.setText("NoSlowDown");
+                noslowdown_button.setTypeface(font);
+                noslowdown_button.setTransformationMethod(null);
+                noslowdown_button.setTextSize(dip2px(7));
+                noslowdown_button.setTextColor(android.graphics.Color.WHITE);
+                noslowdown_button.setGravity(android.view.Gravity.CENTER)
+                noslowdown_button.setBackgroundDrawable(mods.NoSlowDown.state == true ? draw_module_on : draw_module_off);
+                noslowdown_button.setOnClickListener(new android.view.View.OnClickListener({
                     onClick: function() {
-                        mods.AntiWeb.state = !mods.AntiWeb.state;
-                        antiweb_button.setBackgroundDrawable(mods.AntiWeb.state == true ? draw_module_on : draw_module_off);
+                        mods.NoSlowDown.state = !mods.NoSlowDown.state;
+                        noslowdown_button.setBackgroundDrawable(mods.NoSlowDown.state == true ? draw_module_on : draw_module_off);
                     }
                 }));
                 var friends_button = new android.widget.Button(ctx);
@@ -878,7 +931,8 @@ function clickGui() {
                 scrl.addView(velocity_button);
                 scrl.addView(reach_button);
                 scrl.addView(glide_button);
-                scrl.addView(antiweb_button);
+                scrl.addView(noslowdown_button);    
+                scrl.addView(phase_button); 
                 scr.addView(scrl);
                 
                 layout.addView(scr, menuX, menuY2);
@@ -1166,7 +1220,12 @@ function modTick() {
     mods.activate();
     if (!initialized) {
         initialized = !initialized;
-        notifymsg("Mod successfully loaded.");
+        RXM.getModVersion();
+        if (newVersion != currentVersion && newVersion != undefined) {
+            clientMessage(ChatColor.BLUE + "[UPDATE]: " + ChatColor.GRAY + "There is a new update avalable! (" + Texts.General.modTitle + " v" + newVersion + ")");
+        } else {
+            notifymsg("No new updates avalable.");
+        }
     }
 }
 
