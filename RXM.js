@@ -51,7 +51,7 @@ function dip2px(dips) {
         .getDisplayMetrics()
         .density);
 }
-const currentVersion = "0.2";
+const currentVersion = "0.3";
 var newVersion; 
 var releaseNotes = "";
 getModVersion = function() {
@@ -489,15 +489,16 @@ var mods = {
         g: function() {
             if (mods.NoSlowDown.state) {
                 if (getTile(Math.round(getPlayerX() - 0.5), Math.round(getPlayerY() - 1.62), Math.round(getPlayerZ() - 0.5)) == 8 || getTile(Math.round(getPlayerX() - 0.5), Math.round(getPlayerY() - 0.62), Math.round(getPlayerZ() - 0.5)) == 8 || getTile(Math.round(getPlayerX() - 0.5), Math.round(getPlayerY() - 1.62), Math.round(getPlayerZ() - 0.5)) == 9 || getTile(Math.round(getPlayerX() - 0.5), Math.round(getPlayerY() - 0.62), Math.round(getPlayerZ() - 0.5)) == 9) {
-                    if (Players.calculateSpeed > 0.025) {
+                    if (Players.calculateSpeed() > 0.025) {
                         var vector = new Array();
                         var yaw = (getYaw(getPlayerEnt()) + 90) * (Math.PI / 180);
                         var pitch = 0;
                         vector[0] = Math.cos(yaw) * Math.cos(pitch);
                         vector[2] = Math.sin(yaw) * Math.cos(pitch);
-                        vector[0] = vector[0] / 2.5;
-                        vector[2] = vector[2] / 2.5;
-                        Players.setVelocity(vector[0], 0, vector[2]);
+                        vector[0] = vector[0] / 3;
+                        vector[2] = vector[2] / 3;
+                        Entity.setVelX(getPlayerEnt(), vector[0]);
+                        Entity.setVelZ(getPlayerEnt(), vector[2]);
                     }
                 }
                 if (getTile(Math.round(getPlayerX() - 0.5), Math.round(getPlayerY() - 1.62), Math.round(getPlayerZ() - 0.5)) == 30 || getTile(Math.round(getPlayerX() - 0.5), Math.round(getPlayerY() - 0.62), Math.round(getPlayerZ() - 0.5)) == 30) {
@@ -639,15 +640,15 @@ var mods = {
                 mods.Speed.tick++;
                 switch (mods.Speed.mode) {
                     case "Normal":
-                    if(mods.Speed.tick > 7) mods.Speed.tick = 0;
+                    if(mods.Speed.tick > 5) mods.Speed.tick = 0;
                     if(Players.calculateSpeed() > 0.1 && mods.Speed.tick == 0) {
                         var vector = new Array();
                         var yaw = (getYaw(getPlayerEnt()) + 90) * (Math.PI / 180);
                         var pitch = 0;
                         vector[0] = Math.cos(yaw) * Math.cos(pitch);
                         vector[2] = Math.sin(yaw) * Math.cos(pitch);
-                        vector[0] = vector[0] / 0.7;
-                        vector[2] = vector[2] / 0.7;
+                        vector[0] = vector[0] / 0.8;
+                        vector[2] = vector[2] / 0.8;
                         Entity.setVelX(getPlayerEnt(), vector[0]);
                         Entity.setVelZ(getPlayerEnt(), vector[2]);
                     }
