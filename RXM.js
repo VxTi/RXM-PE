@@ -51,7 +51,7 @@ function dip2px(dips) {
         .getDisplayMetrics()
         .density);
 }
-const currentVersion = "0.4";
+const currentVersion = "0.5";
 var newVersion; 
 var releaseNotes = "";
 getModVersion = function() {
@@ -489,8 +489,19 @@ var mods = {
         webstate: false,  
         g: function() {
             if (mods.NoSlowDown.state) {
+            if (Entity.isSneaking(getPlayerEnt()) && Players.calculateSpeed() > 0.03 && Players.calculateSpeed() < 0.05) {
+                var vector = new Array();
+                        var yaw = (getYaw(getPlayerEnt()) + 90) * (Math.PI / 180);
+                        var pitch = 0;
+                        vector[0] = Math.cos(yaw) * Math.cos(pitch);
+                        vector[2] = Math.sin(yaw) * Math.cos(pitch);
+                        vector[0] = vector[0] / 2;
+                        vector[2] = vector[2] / 2;
+                        Entity.setVelX(getPlayerEnt(), vector[0]);      
+                        Entity.setVelZ(getPlayerEnt(), vector[2]);
+            }
                 if (getTile(Math.round(getPlayerX() - 0.5), Math.round(getPlayerY() - 1.62), Math.round(getPlayerZ() - 0.5)) == 8 || getTile(Math.round(getPlayerX() - 0.5), Math.round(getPlayerY() - 0.62), Math.round(getPlayerZ() - 0.5)) == 8 || getTile(Math.round(getPlayerX() - 0.5), Math.round(getPlayerY() - 1.62), Math.round(getPlayerZ() - 0.5)) == 9 || getTile(Math.round(getPlayerX() - 0.5), Math.round(getPlayerY() - 0.62), Math.round(getPlayerZ() - 0.5)) == 9) {
-                    if (Players.calculateSpeed() > 0.03) {
+                    if (Players.calculateSpeed() > 0.07 && Players.calculateSpeed() < 0.09) {
                         var vector = new Array();
                         var yaw = (getYaw(getPlayerEnt()) + 90) * (Math.PI / 180);
                         var pitch = 0;
@@ -498,7 +509,7 @@ var mods = {
                         vector[2] = Math.sin(yaw) * Math.cos(pitch);
                         vector[0] = vector[0] / 3.9;
                         vector[2] = vector[2] / 3.9;
-                        Entity.setVelX(getPlayerEnt(), vector[0]);
+                        Entity.setVelX(getPlayerEnt(), vector[0]);     
                         Entity.setVelZ(getPlayerEnt(), vector[2]);
                     }
                 }
@@ -574,9 +585,11 @@ var mods = {
         tick: 0,
         g: function() {
             if (mods.FastLadder.state) {
-            if (mods.FastLadder.tick == 20) mods.FastLadder.tick = 0;
-            if (mods.FastLadder.tick == 0 && getTile(Math.round(getPlayerX() - 0.5), Math.round(getPlayerY() - 1.62), Math.round(getPlayerZ() - 0.5)) == 65 || getTile(Math.round(getPlayerX() - 0.5), Math.round(getPlayerY() - 0.62), Math.round(getPlayerZ() - 0.5)) == 65) setVelY(getPlayerEnt(), 0.425);
+            if (mods.FastLadder.tick > 60) mods.FastLadder.tick = 0;
             mods.FastLadder.tick++;
+            if (mods.FastLadder.tick == 0 && getTile(Math.round(getPlayerX() - 0.5), Math.round(getPlayerY() - 1.62), Math.round(getPlayerZ() - 0.5)) == 65 || getTile(Math.round(getPlayerX() - 0.5), Math.round(getPlayerY() - 0.62), Math.round(getPlayerZ() - 0.5)) == 65 || getTile(Math.round(getPlayerX() - 0.5), Math.round(getPlayerY() - 0.62), Math.round(getPlayerZ() - 0.5)) == 106 || getTile(Math.round(getPlayerX() - 0.5), Math.round(getPlayerY() - 1.62), Math.round(getPlayerZ() - 0.5)) == 106) {
+               if (Entity.getVelY(getPlayerEnt()) > 0.1176 && Entity.getVelY(getPlayerEnt()) < 0.1177) setVelY(getPlayerEnt(), 0.425);
+                }
             }
         }
     },
@@ -603,8 +616,8 @@ var mods = {
                 if (Players.isCollidedHorizontally()) {
                     if(mods.Step.mode == "Velocity") Entity.setVelY(getPlayerEnt(), 0.425);
                     if(mods.Step.mode == "Teleport") {
-                        Entity.setPositionRelative(getPlayerEnt(), 0, 1.6, 0);
-                        Entity.setVelY(getPlayerEnt(), 0.05);
+                        Entity.setPositionRelative(getPlayerEnt(), 0, 1.3, 0);
+                        Entity.setVelY(getPlayerEnt(), 0.02);
                     }
                     if (mods.Step.mode == "Fast") {
                             var vector = new Array();
@@ -612,8 +625,8 @@ var mods = {
                             var pitch = 0;
                             vector[0] = Math.cos(yaw) * Math.cos(pitch);
                             vector[2] = Math.sin(yaw) * Math.cos(pitch);
-                            vector[0] = vector[0] / 5;
-                            vector[2] = vector[2] / 5;
+                            vector[0] = vector[0] / 3.5;
+                            vector[2] = vector[2] / 3.5;
                             Players.setVelocity(vector[0], 0.425, vector[2]);
                     }
                 }
@@ -812,6 +825,7 @@ function clickGui() {
                 reach_button.setOnClickListener(new android.view.View.OnClickListener({
                     onClick: function() {
                         mods.Reach.state = !mods.Reach.state;
+                        if (!mods.Reach.state && Level.getGameMode() == 1) Level.setGameMode(0);
                         reach_button.setBackgroundDrawable(mods.Reach.state == true ? draw_module_on : draw_module_off);
                     }
                 }));
